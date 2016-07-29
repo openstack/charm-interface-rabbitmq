@@ -11,6 +11,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import base64
+
 from charms.reactive import RelationBase
 from charms.reactive import hook
 from charms.reactive import scopes
@@ -101,7 +103,7 @@ class RabbitMQRequires(RelationBase):
         self.request_access(username, vhost)
 
     def get_remote_all(self, key, default=None):
-        '''Return a list of all values presented by remote units for key'''
+        """Return a list of all values presented by remote units for key"""
         values = []
         for conversation in self.conversations():
             for relation_id in conversation.relation_ids:
@@ -115,3 +117,9 @@ class RabbitMQRequires(RelationBase):
 
     def rabbitmq_hosts(self):
         return self.get_remote_all('private-address')
+
+    def get_ssl_cert(self):
+        """Return decoded CA cert from rabbit or None if no CA present"""
+        if self.ssl_ca():
+            return base64.b64decode(self.ssl_ca()).decode('utf-8')
+        return None

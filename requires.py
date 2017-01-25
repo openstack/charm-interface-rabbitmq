@@ -84,13 +84,22 @@ class RabbitMQRequires(RelationBase):
             return True
         return False
 
-    def request_access(self, username, vhost):
+    def request_access(self, username, vhost, hostname=None):
         """
         Request access to vhost for the supplied username.
         """
+        if not hostname:
+            try:
+                hostname = hookenv.network_get_primary_address(
+                    self.conversation().relation_name
+                )
+            except NotImplementedError:
+                hostname = hookenv.unit_private_ip()
+
         relation_info = {
             'username': username,
             'vhost': vhost,
+            'private-address': hostname,
         }
         self.set_local(**relation_info)
         self.set_remote(**relation_info)

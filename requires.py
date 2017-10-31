@@ -125,7 +125,7 @@ class RabbitMQRequires(RelationBase):
         return list(set(values))
 
     def rabbitmq_hosts(self):
-        return self.get_remote_all('private-address')
+        return sorted(self.get_remote_all('private-address'))
 
     def get_ssl_cert(self):
         """Return decoded CA cert from rabbit or None if no CA present"""

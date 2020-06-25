@@ -47,7 +47,7 @@ class RabbitMQRequires(RelationBase):
         else:
             self.remove_state('{relation_name}.available')
             self.remove_state('{relation_name}.available.ssl')
-        if not self.rabbitmq_hosts():
+        if not self.rabbitmq_connected_hosts():
             self.remove_state('{relation_name}.connected')
 
     @hook('{requires:rabbitmq}-relation-changed')
@@ -124,8 +124,26 @@ class RabbitMQRequires(RelationBase):
                         values.append(value)
         return list(set(values))
 
+    def rabbitmq_connected_hosts(self):
+        """Return list of connected rabbit units."""
+        return self.get_remote_all('private-address')
+
+    def rabbitmq_ready_hosts(self):
+        """Return list of rabbit units ready to accept client connections."""
+        hosts = []
+        for conversation in self.conversations():
+            for relation_id in conversation.relation_ids:
+                for unit in hookenv.related_units(relation_id):
+                    rdata = hookenv.relation_get(unit=unit, rid=relation_id)
+                    if rdata.get('password') and rdata.get('private-address'):
+                        hosts.append(rdata['private-address'])
+        return sorted(hosts)
+
     def rabbitmq_hosts(self):
-        return sorted(self.get_remote_all('private-address'))
+        """
+        DEPRECATED: Use rabbitmq_connected_hosts or rabbitmq_ready_hosts
+        Return list of rabbit units ready to accept client connections."""
+        return self.rabbitmq_ready_hosts()
 
     def get_ssl_cert(self):
         """Return decoded CA cert from rabbit or None if no CA present"""
